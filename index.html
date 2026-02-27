@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>申根計算器 V2.4</title>
+    <title>申根計算器 V2.6</title>
     <style>
-        :root { --primary: #1a2a6c; --stay-color: #b3c7ff; --accent: #ff4757; }
+        :root { --primary: #1a2a6c; --stay-color: #b3c7ff; --accent: #ff4757; --success: #28a745; }
         body { background: #222; margin: 0; display: flex; justify-content: center; font-family: -apple-system, sans-serif; }
         .app { width: 390px; height: 100vh; background: #fdfdfd; padding: 8px 10px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
         
+        /* 頂部導覽 */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; }
         .month-display { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; }
         .today-btn { background: #eee; border: 1px solid #ccc; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: var(--primary); }
@@ -16,28 +17,36 @@
 
         .record-btn { background: white; color: var(--primary); border: 1.5px solid var(--primary); width: 100%; padding: 8px; border-radius: 10px; font-size: 14px; margin: 8px 0; font-weight: bold; cursor: pointer; }
 
+        /* 日曆格 */
         .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--primary); color: white; font-weight: bold; text-align: center; padding: 4px 0; font-size: 12px; }
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; border-left: 1px solid #ddd; border-top: 1px solid #ddd; margin-bottom: 5px; }
-        
-        /* 壓縮格子高度 */
         .day { background: white; height: 42px; border-right: 1px solid #ddd; border-bottom: 1px solid #ddd; position: relative; box-sizing: border-box; }
         .day span { position: absolute; top: 1px; left: 3px; font-size: 14px; font-weight: 600; color: #333; }
         .remain { position: absolute; right: 1.5px; bottom: 1px; font-size: 10px; color: #888; }
         .note-tag { position: absolute; left: 2px; bottom: 1px; font-size: 9px; color: #1a2a6c; font-weight: bold; max-width: 65%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .danger { color: var(--accent) !important; font-weight: bold; }
-
         .stay { background: var(--stay-color) !important; }
         .stay-start { border-radius: 8px 0 0 8px; }
         .stay-end { border-radius: 0 8px 8px 0; }
 
+        /* 彈窗樣式 */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
-        .modal-content { background: white; width: 100%; max-width: 340px; padding: 18px; border-radius: 20px; }
-        input { width: 100%; padding: 10px; margin: 5px 0 12px; border: 1px solid #ccc; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
-        .main-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; }
-        .sec-btn { background: #eee; color: #333; border: none; padding: 10px; border-radius: 10px; cursor: pointer; }
+        .modal-content { background: white; width: 100%; max-width: 340px; padding: 18px; border-radius: 20px; box-sizing: border-box; }
         
-        /* 備份按鈕排版 */
-        .backup-group { display: flex; gap: 8px; margin-top: 10px; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .list-header h3 { margin: 0; font-size: 18px; color: var(--primary); }
+        .mini-add-btn { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; }
+
+        /* 修改後的水平排版表單 */
+        .form-row { display: flex; align-items: center; margin-bottom: 12px; gap: 10px; }
+        .form-row label { width: 70px; font-weight: bold; color: #444; font-size: 15px; flex-shrink: 0; }
+        .form-row input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 16px; box-sizing: border-box; min-width: 0; }
+        
+        .main-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; }
+        .back-btn { background: #eee; color: #333; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 8px; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        .backup-group { display: flex; gap: 8px; margin-top: 15px; }
+        .sec-btn { background: #f8f8f8; border: 1px solid #ddd; color: #666; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 12px; flex: 1; }
         .record-card { background: #f0f4ff; padding: 10px; margin-bottom: 6px; border-radius: 10px; border: 1px solid #d0d7de; }
     </style>
 </head>
@@ -59,28 +68,43 @@
 
 <div id="mList" class="modal" onclick="if(event.target==this)hide('mList')">
     <div class="modal-content">
-        <h3>歷史紀錄</h3>
-        <button class="main-btn" style="background:#28a745; margin-bottom:8px;" onclick="showEdit(-1)">＋ 新增紀錄</button>
+        <div class="list-header">
+            <h3>歷史紀錄</h3>
+            <button class="mini-add-btn" onclick="showEdit(-1)">+ 新增紀錄</button>
+        </div>
         <div id="listItems" style="max-height:220px; overflow-y:auto;"></div>
         
         <div class="backup-group">
-            <button class="sec-btn" style="flex:1" onclick="exportData()">💾 備份資料</button>
-            <button class="sec-btn" style="flex:1" onclick="importData()">🔄 還原資料</button>
+            <button class="sec-btn" onclick="exportData()">💾 備份資料</button>
+            <button class="sec-btn" onclick="importData()">🔄 還原資料</button>
         </div>
         
-        <button class="sec-btn" style="width:100%; margin-top:8px;" onclick="hide('mList')">回前頁</button>
+        <button class="back-btn" onclick="hide('mList')">← <b>回前頁</b></button>
     </div>
 </div>
 
 <div id="mEdit" class="modal">
     <div class="modal-content">
-        <h3 id="editT">新增區段</h3>
-        <label>入境</label><input type="date" id="iStart">
-        <label>出境</label><input type="date" id="iEnd">
-        <label>備註</label><input type="text" id="iNote" placeholder="例如: 德國">
-        <button class="main-btn" onclick="save()">儲存</button>
-        <button id="delB" class="sec-btn" style="background:#dc3545; color:white; margin-top:6px; width:100%;" onclick="del()">刪除</button>
-        <button class="sec-btn" style="margin-top:6px; width:100%;" onclick="hide('mEdit')">取消</button>
+        <h3 id="editT" style="margin-top:0; color:var(--primary); margin-bottom: 20px;">新增區段</h3>
+        
+        <div class="form-row">
+            <label>入境</label>
+            <input type="date" id="iStart">
+        </div>
+        
+        <div class="form-row">
+            <label>出境</label>
+            <input type="date" id="iEnd">
+        </div>
+        
+        <div class="form-row">
+            <label>備註</label>
+            <input type="text" id="iNote" placeholder="例如: 德國">
+        </div>
+
+        <button class="main-btn" style="margin-top: 10px;" onclick="save()">儲存</button>
+        <button id="delB" class="back-btn" style="background:#dc3545; color:white; font-size:14px; margin-top:8px;" onclick="del()">刪除此紀錄</button>
+        <button class="back-btn" style="font-size:14px;" onclick="hide('mEdit')">取消</button>
     </div>
 </div>
 
@@ -96,14 +120,25 @@
     
     function showEdit(idx) {
         editIdx = idx; document.getElementById('mEdit').style.display='flex';
-        document.getElementById('delB').style.display = idx === -1 ? 'none' : 'block';
-        if(idx === -1) { document.getElementById('iStart').value=''; document.getElementById('iEnd').value=''; document.getElementById('iNote').value=''; }
-        else { document.getElementById('iStart').value=data[idx].s; document.getElementById('iEnd').value=data[idx].e; document.getElementById('iNote').value=data[idx].n || ''; }
+        const delBtn = document.getElementById('delB');
+        delBtn.style.display = idx === -1 ? 'none' : 'block';
+        document.getElementById('editT').innerText = idx === -1 ? '新增區段' : '修改紀錄';
+        
+        if(idx === -1) {
+            document.getElementById('iStart').value=''; 
+            document.getElementById('iEnd').value=''; 
+            document.getElementById('iNote').value=''; 
+        } else {
+            document.getElementById('iStart').value=data[idx].s;
+            document.getElementById('iEnd').value=data[idx].e;
+            document.getElementById('iNote').value=data[idx].n || '';
+        }
     }
 
     function save() {
         const s = document.getElementById('iStart').value, e = document.getElementById('iEnd').value, n = document.getElementById('iNote').value;
         if(!s || !e) return;
+        if(new Date(s) > new Date(e)) { alert("入境日期不能晚於出境日期"); return; }
         if(editIdx === -1) data.push({s, e, n}); else data[editIdx] = {s, e, n};
         data.sort((a,b)=>new Date(a.s)-new Date(b.s));
         localStorage.setItem("schengen_data_v5", JSON.stringify(data));
@@ -113,14 +148,15 @@
     function del() { if(confirm("確定刪除？")) { data.splice(editIdx,1); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); hide('mEdit'); renderList(); render(); } }
 
     function renderList() {
-        document.getElementById('listItems').innerHTML = data.map((item, i)=> `<div class="record-card" onclick="showEdit(${i})"><b>${item.s.replace(/-/g,'/')} ~ ${item.e.replace(/-/g,'/')}</b><br><small>${item.n||''}</small></div>`).join('');
+        const list = document.getElementById('listItems');
+        list.innerHTML = data.length === 0 ? '<p style="color:#999;text-align:center;">尚無紀錄</p>' : 
+            data.map((item, i)=> `<div class="record-card" onclick="showEdit(${i})"><b>${item.s.replace(/-/g,'/')} ~ ${item.e.replace(/-/g,'/')}</b><br><small>${item.n||''}</small></div>`).join('');
     }
 
-    // --- 備份功能邏輯 ---
     function exportData() {
         const str = JSON.stringify(data);
         const el = document.createElement('textarea'); el.value = str; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-        alert("代碼已複製！請貼到 LINE 或記事本存起來。換手機時還原即可。");
+        alert("代碼已複製！");
     }
 
     function importData() {
@@ -134,7 +170,7 @@
                     render(); renderList();
                     alert("還原成功！");
                 }
-            } catch(e) { alert("無效的代碼"); }
+            } catch(e) { alert("代碼無效"); }
         }
     }
 
