@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>申根計算器 V2.9 Premium</title>
+    <title>申根計算器 V3.0 Premium</title>
     <style>
         :root { 
-            --primary: #1a2a6c; --stay-color: #b3c7ff; --accent: #ff4757; --success: #28a745;
+            --primary: #1a2a6c; --stay-color: #b3c7ff; --accent: #ff4757; --warning: #ffa500; --success: #28a745;
             --bg: #fdfdfd; --text: #333; --card: #f0f4ff; --border: #ddd; --modal: #fff;
         }
 
-        /* 強力深色模式修正 */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg: #1a1a1a; --text: #eee; --card: #2c2c2e; --border: #444; --modal: #2c2c2e;
@@ -20,14 +19,10 @@
             input { background: #3a3a3c !important; color: white !important; border-color: #444 !important; }
             .day { background: #1a1a1a !important; border-color: #333 !important; }
             .day span { color: #eee !important; }
-            .nav-btn { background: #333 !important; border: 1px solid #444 !important; }
-            .today-btn { background: #333 !important; border: 1px solid #444 !important; }
+            .nav-btn, .today-btn { background: #333 !important; border: 1px solid #444 !important; }
             .record-btn { background: transparent !important; color: white !important; border-color: white !important; }
             .back-btn { background: #3a3a3c !important; color: white !important; }
-            
-            /* 針對深色模式標題文字的強制修正 */
-            .modal-content h3 { color: #FFFFFF !important; }
-            .form-row label { color: #FFFFFF !important; }
+            .modal-content h3, .form-row label { color: #FFFFFF !important; }
         }
 
         body { background: #222; margin: 0; display: flex; justify-content: center; font-family: -apple-system, sans-serif; color: var(--text); }
@@ -44,25 +39,24 @@
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; border-left: 1px solid var(--border); border-top: 1px solid var(--border); margin-bottom: 5px; }
         .day { background: white; height: 42px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; box-sizing: border-box; }
         .day span { position: absolute; top: 1px; left: 3px; font-size: 14px; font-weight: 600; color: #333; }
-        .remain { position: absolute; right: 1.5px; bottom: 1px; font-size: 10px; color: #888; }
+        
+        /* 剩餘天數樣式與顏色邏輯 */
+        .remain { position: absolute; right: 1.5px; bottom: 1px; font-size: 10px; color: #888; font-weight: bold; }
+        .rem-warn { color: var(--warning) !important; font-size: 11px; } /* 小於10天橘色 */
+        .rem-danger { color: var(--accent) !important; font-size: 11px; } /* 小於等於0天紅色 */
+
         .note-tag { position: absolute; left: 2px; bottom: 1px; font-size: 9px; color: #5dade2; font-weight: bold; max-width: 65%; overflow: hidden; white-space: nowrap; }
-        .danger { color: var(--accent) !important; font-weight: bold; }
         .stay { background: var(--stay-color) !important; }
         .stay-start { border-radius: 8px 0 0 8px; }
         .stay-end { border-radius: 0 8px 8px 0; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
         .modal-content { background: var(--modal); width: 100%; max-width: 340px; padding: 18px; border-radius: 20px; box-sizing: border-box; color: var(--text); }
-        
         .form-row { display: flex; align-items: center; margin-bottom: 15px; gap: 4px; }
         .form-row label { width: 55px; font-weight: 800; color: var(--text); font-size: 17px; flex-shrink: 0; }
-        .form-row input { flex: 1; padding: 12px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 16px; font-weight: 500; outline: none; }
-        
+        .form-row input { flex: 1; padding: 12px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 16px; outline: none; }
         .main-btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; }
-        
-        /* 🔙 圖示按鈕 */
         .back-btn { background: #f0f0f0; color: #333; border: none; padding: 12px; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 8px; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
         .record-card { background: var(--card); padding: 12px; margin-bottom: 8px; border-radius: 12px; border: 1px solid var(--border); }
         .backup-group { display: flex; gap: 8px; margin-top: 15px; }
         .sec-btn { background: transparent; border: 1px solid var(--border); color: #888; padding: 8px; border-radius: 8px; font-size: 12px; flex: 1; }
@@ -86,7 +80,7 @@
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h3 style="margin:0">歷史紀錄</h3>
-            <button onclick="showEdit(-1)" style="background:var(--success); color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:800; font-size:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">+ 新增</button>
+            <button onclick="showEdit(-1)" style="background:var(--success); color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:800; font-size:15px;">+ 新增</button>
         </div>
         <div id="listItems" style="max-height:220px; overflow-y:auto;"></div>
         <div class="backup-group"><button class="sec-btn" onclick="exportData()">💾 備份</button><button class="sec-btn" onclick="importData()">🔄 還原</button></div>
@@ -153,6 +147,7 @@
         });
         return 90 - used;
     }
+
     function renderMonth(y, m) {
         let html = `<div style="text-align:center;font-weight:bold;margin:8px 0 4px; color:#777;font-size:14px;">${y}年 ${m+1}月</div><div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div><div class="calendar">`;
         let f = new Date(y, m, 1).getDay(), l = new Date(y, m+1, 0).getDate();
@@ -160,9 +155,14 @@
         for(let i=1; i<=l; i++) {
             let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
             let date = new Date(y, m, i);
-            let rem = getRem(date), cls = "", note = "";
+            let rem = getRem(date), cls = "", remCls = "remain", note = "";
+            
+            // 加入警示顏色邏輯
+            if (rem <= 0) remCls += " rem-danger";
+            else if (rem < 10) remCls += " rem-warn";
+
             data.forEach(r => { if(dStr >= r.s && dStr <= r.e) { cls += " stay"; if(dStr===r.s) { cls+=" stay-start"; note = r.n || ""; } if(dStr===r.e) cls+=" stay-end"; }});
-            html += `<div class="day ${cls}"><span>${i}</span><div class="note-tag">${note}</div><div class="remain ${rem<0?'danger':''}">${rem}</div></div>`;
+            html += `<div class="day ${cls}"><span>${i}</span><div class="note-tag">${note}</div><div class="${remCls}">${rem}</div></div>`;
         }
         return html + `</div>`;
     }
