@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>申根計算器 V3.1 Premium</title>
+    
+    <title>Schengen Pro</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="申根計算">
+    
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/753/753760.png">
+    
     <style>
         :root { 
             --primary: #1a2a6c; --stay-color: #b3c7ff; --accent: #ff4757; --warning: #ffa500; --success: #28a745;
@@ -26,9 +33,9 @@
         }
 
         body { background: #222; margin: 0; display: flex; justify-content: center; font-family: -apple-system, sans-serif; color: var(--text); }
-        .app { width: 390px; height: 100vh; background: var(--bg); padding: 8px 10px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
+        .app { width: 390px; height: 100vh; background: var(--bg); padding: env(safe-area-inset-top) 10px 8px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 2px; }
         .month-display { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; }
         .today-btn { background: #eee; border: 1px solid #ccc; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; line-height: 1; }
         .nav-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
@@ -92,7 +99,7 @@
         <h3 id="editT" style="margin-top:0; color:var(--primary); margin-bottom:20px;">新增區段</h3>
         <div class="form-row"><label>入境</label><input type="date" id="iStart"></div>
         <div class="form-row"><label>出境</label><input type="date" id="iEnd"></div>
-        <div class="form-row"><label>備註</label><input type="text" id="iNote" placeholder="例如: 團型 "></div>
+        <div class="form-row"><label>備註</label><input type="text" id="iNote" placeholder="例如: 德國 SPS"></div>
         <button class="main-btn" onclick="save()">儲存</button>
         <button id="delB" class="back-btn" style="background:var(--accent); color:white; margin-top:8px; font-size:14px;" onclick="del()">🗑️ 刪除紀錄</button>
         <button class="back-btn" style="font-size:14px;" onclick="hide('mEdit')">取消</button>
@@ -100,10 +107,10 @@
 </div>
 
 <script>
+    /* JS 部分保持 V3.1 的邏輯 (含反向排序) */
     let cur = new Date();
     let data = JSON.parse(localStorage.getItem("schengen_data_v5") || "[]");
     let editIdx = -1;
-
     function hide(id) { document.getElementById(id).style.display='none'; }
     function changeMonth(n) { cur.setMonth(cur.getMonth()+n); render(); }
     function goToday() { cur = new Date(); render(); }
@@ -114,39 +121,27 @@
         if(idx === -1) { document.getElementById('iStart').value=''; document.getElementById('iEnd').value=''; document.getElementById('iNote').value=''; }
         else { document.getElementById('iStart').value=data[idx].s; document.getElementById('iEnd').value=data[idx].e; document.getElementById('iNote').value=data[idx].n || ''; }
     }
-
-    // 儲存時進行反向排序 (新日期在上)
     function save() {
         const s = document.getElementById('iStart').value, e = document.getElementById('iEnd').value, n = document.getElementById('iNote').value;
         if(!s || !e) return;
         if(new Date(s) > new Date(e)) { alert("入境日期不能晚於出境日期"); return; }
-        
-        if(editIdx === -1) data.push({s, e, n}); 
-        else data[editIdx] = {s, e, n};
-
-        // 核心改動：改為 (b - a) 遞減排序
+        if(editIdx === -1) data.push({s, e, n}); else data[editIdx] = {s, e, n};
         data.sort((a,b) => new Date(b.s) - new Date(a.s));
-        
         localStorage.setItem("schengen_data_v5", JSON.stringify(data));
         hide('mEdit'); renderList(); render();
     }
-
     function del() { if(confirm("確定刪除？")) { data.splice(editIdx,1); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); hide('mEdit'); renderList(); render(); } }
-    
     function renderList() {
-        // 確保顯示前也是排序過的狀態
         data.sort((a,b) => new Date(b.s) - new Date(a.s));
         document.getElementById('listItems').innerHTML = data.length === 0 ? '<p style="color:#999;text-align:center;">尚無紀錄</p>' : 
             data.map((item, i)=> `<div class="record-card" onclick="showEdit(${i})"><b>${item.s.replace(/-/g,'/')} ~ ${item.e.replace(/-/g,'/')}</b><br><small>${item.n||''}</small></div>`).join('');
     }
-
     function exportData() {
         const el = document.createElement('textarea'); el.value = JSON.stringify(data); document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); alert("已複製！");
     }
     function importData() {
         const c = prompt("貼上代碼："); if(c) { try{ data = JSON.parse(c); data.sort((a,b) => new Date(b.s) - new Date(a.s)); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); render(); renderList(); alert("導入成功"); } catch(e){ alert("代碼錯誤"); } }
     }
-
     function getRem(targetDate) {
         let used = 0;
         let d = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
@@ -159,7 +154,6 @@
         });
         return 90 - used;
     }
-
     function renderMonth(y, m) {
         let html = `<div style="text-align:center;font-weight:bold;margin:8px 0 4px; color:#777;font-size:14px;">${y}年 ${m+1}月</div><div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div><div class="calendar">`;
         let f = new Date(y, m, 1).getDay(), l = new Date(y, m+1, 0).getDate();
@@ -168,8 +162,7 @@
             let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
             let date = new Date(y, m, i);
             let rem = getRem(date), cls = "", remCls = "remain", note = "";
-            if (rem <= 0) remCls += " rem-danger";
-            else if (rem < 10) remCls += " rem-warn";
+            if (rem <= 0) remCls += " rem-danger"; else if (rem < 10) remCls += " rem-warn";
             data.forEach(r => { if(dStr >= r.s && dStr <= r.e) { cls += " stay"; if(dStr===r.s) { cls+=" stay-start"; note = r.n || ""; } if(dStr===r.e) cls+=" stay-end"; }});
             html += `<div class="day ${cls}"><span>${i}</span><div class="note-tag">${note}</div><div class="${remCls}">${rem}</div></div>`;
         }
