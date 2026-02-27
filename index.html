@@ -1,318 +1,281 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>申根停留計算器</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>申根停留計算器</title>
+    <style>
+        :root { --main-blue: #1f3c88; --light-blue: #c8d8ff; --bg: #f5f7fb; }
+        body { font-family: -apple-system, sans-serif; background: #333; margin: 0; display: flex; justify-content: center; }
+        
+        /* 手機寬度固定 */
+        .app { width: 390px; height: 100vh; background: white; padding: 12px; box-sizing: border-box; overflow-y: auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .nav-btn { background: var(--main-blue); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        
+        .record-btn { 
+            background: var(--main-blue); color: white; border: none; padding: 12px; 
+            width: 100%; border-radius: 10px; font-size: 16px; margin: 10px 0; font-weight: bold;
+        }
 
-<style>
-body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    background:#f5f7fb;
-    margin:0;
-    display:flex;
-    justify-content:center;
-}
+        .month-title { text-align: center; font-weight: bold; margin: 10px 0 5px; color: #333; }
+        
+        /* 星期列標頭 */
+        .weekdays { 
+            display: grid; grid-template-columns: repeat(7, 1fr); 
+            background: var(--main-blue); color: white; font-weight: bold; 
+            font-size: 13px; text-align: center; padding: 6px 0;
+        }
 
-.app{
-    width:390px;
-    height:100vh;
-    overflow:hidden;
-    background:white;
-    padding:12px;
-    box-sizing:border-box;
-}
+        /* 日曆格陣列 */
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); background: #eee; gap: 0px; border: 1px solid #eee; }
+        .day { 
+            background: white; height: 42px; position: relative; font-size: 12px; 
+            border: 0.5px solid #f0f0f0; box-sizing: border-box; 
+        }
+        .day span { position: absolute; top: 2px; left: 4px; z-index: 2; }
+        .remaining { position: absolute; right: 2px; bottom: 2px; font-size: 9px; color: #999; z-index: 2; }
+        .remaining.warning { color: orange; font-weight: bold; }
+        .remaining.danger { color: red; font-weight: bold; }
 
-.header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
+        /* 停留日期連續效果 */
+        .stay { background: var(--light-blue); }
+        .stay-start { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        .stay-end { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
 
-.nav-btn{
-    background:#2d4ea2;
-    color:white;
-    border:none;
-    padding:8px 14px;
-    border-radius:8px;
-    font-size:14px;
-}
+        /* 彈窗 UI */
+        .modal { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
+            display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal-content { 
+            background: white; width: 320px; border-radius: 15px; padding: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 { margin-top: 0; color: var(--main-blue); }
+        
+        input[type="date"] { 
+            width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; 
+            border-radius: 8px; font-size: 16px; box-sizing: border-box;
+        }
+        
+        .big-btn { 
+            background: var(--main-blue); color: white; border: none; padding: 12px; 
+            border-radius: 8px; font-size: 15px; width: 100%; margin: 5px 0; cursor: pointer;
+        }
+        .secondary-btn { background: #666; }
 
-.record-btn{
-    background:#1f3c88;
-    color:white;
-    border:none;
-    padding:12px;
-    width:100%;
-    border-radius:10px;
-    font-size:16px;
-    margin:8px 0 12px;
-}
-
-.month-title{
-    text-align:center;
-    font-weight:600;
-    margin:6px 0;
-}
-
-.weekdays{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    background:#1f3c88;
-    color:white;
-    font-weight:bold;
-    font-size:13px;
-    text-align:center;
-    padding:4px 0;
-}
-
-.calendar{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:0;
-}
-
-.day{
-    height:38px;
-    position:relative;
-    font-size:13px;
-    border-bottom:1px solid #e5e5e5;
-}
-
-.day span{
-    position:absolute;
-    top:4px;
-    left:6px;
-}
-
-.remaining{
-    position:absolute;
-    right:6px;
-    bottom:4px;
-    font-size:10px;
-    color:#777;
-}
-
-.remaining.warning{color:orange;}
-.remaining.danger{color:red;}
-
-.stay{
-    background:#c8d8ff;
-}
-
-.stay-start{
-    border-radius:8px 0 0 8px;
-}
-.stay-end{
-    border-radius:0 8px 8px 0;
-}
-
-.modal{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.4);
-    display:none;
-    justify-content:center;
-    align-items:center;
-}
-
-.modal-content{
-    background:white;
-    width:350px;
-    max-height:80vh;
-    overflow:auto;
-    border-radius:12px;
-    padding:16px;
-}
-
-.big-btn{
-    background:#2d4ea2;
-    color:white;
-    border:none;
-    padding:10px;
-    border-radius:8px;
-    font-size:15px;
-    margin:6px 0;
-    width:100%;
-}
-
-.record-item{
-    background:#f0f4ff;
-    padding:8px;
-    border-radius:8px;
-    margin:6px 0;
-    font-size:13px;
-}
-</style>
+        .record-item { 
+            background: #f0f4ff; padding: 12px; border-radius: 8px; margin: 8px 0; 
+            font-size: 14px; cursor: pointer; border: 1px solid #d0d7de;
+        }
+    </style>
 </head>
 
 <body>
 <div class="app">
+    <div class="header">
+        <button class="nav-btn" onclick="changeMonth(-1)">‹ 前一個月</button>
+        <div id="currentMonthLabel" style="font-weight: bold;"></div>
+        <button class="nav-btn" onclick="changeMonth(1)">下一個月 ›</button>
+    </div>
 
-<div class="header">
-<button class="nav-btn" onclick="changeMonth(-1)">‹</button>
-<div id="currentMonth"></div>
-<button class="nav-btn" onclick="changeMonth(1)">›</button>
+    <button class="record-btn" onclick="openRecordList()">出入境紀錄管理</button>
+
+    <div id="calendarContainer"></div>
 </div>
 
-<button class="record-btn" onclick="openModal()">出入境紀錄</button>
-
-<div id="calendarContainer"></div>
-
+<div class="modal" id="listModal">
+    <div class="modal-content">
+        <h3>歷史紀錄</h3>
+        <button class="big-btn" onclick="openEditModal()">＋ 新增入境區段</button>
+        <div id="recordList" style="max-height: 300px; overflow-y: auto; margin: 10px 0;"></div>
+        <button class="big-btn secondary-btn" onclick="closeModal('listModal')">回前頁</button>
+    </div>
 </div>
 
-<div class="modal" id="modal">
-<div class="modal-content">
-<h3>出入境紀錄</h3>
-
-<button class="big-btn" onclick="addRecord()">新增</button>
-<button class="big-btn" onclick="closeModal()">回前頁</button>
-
-<div id="recordList"></div>
-</div>
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <h3 id="editTitle">新增紀錄</h3>
+        <label>入境日期</label>
+        <input type="date" id="inputStart">
+        <label>出境日期</label>
+        <input type="date" id="inputEnd">
+        <button class="big-btn" onclick="saveRecord()">儲存</button>
+        <button id="delBtn" class="big-btn" style="background:#d9534f; display:none;" onclick="deleteRecord()">刪除此紀錄</button>
+        <button class="big-btn secondary-btn" onclick="closeModal('editModal')">取消</button>
+    </div>
 </div>
 
 <script>
-let currentDate=new Date();
-let records=JSON.parse(localStorage.getItem("records")||"[]");
+    let currentDate = new Date();
+    let records = JSON.parse(localStorage.getItem("schengen_v2") || "[]");
+    let editingIndex = -1;
 
-function save(){
-localStorage.setItem("records",JSON.stringify(records));
-}
+    function saveToLocal() {
+        localStorage.setItem("schengen_v2", JSON.stringify(records));
+    }
 
-function changeMonth(offset){
-currentDate.setMonth(currentDate.getMonth()+offset);
-render();
-}
+    function changeMonth(offset) {
+        currentDate.setMonth(currentDate.getMonth() + offset);
+        render();
+    }
 
-function openModal(){
-document.getElementById("modal").style.display="flex";
-renderRecords();
-}
+    // 彈窗控制
+    function openRecordList() {
+        document.getElementById("listModal").style.display = "flex";
+        renderRecordList();
+    }
 
-function closeModal(){
-document.getElementById("modal").style.display="none";
-}
+    function openEditModal(index = -1) {
+        editingIndex = index;
+        const modal = document.getElementById("editModal");
+        const title = document.getElementById("editTitle");
+        const delBtn = document.getElementById("delBtn");
+        
+        if (index === -1) {
+            title.innerText = "新增紀錄";
+            document.getElementById("inputStart").value = "";
+            document.getElementById("inputEnd").value = "";
+            delBtn.style.display = "none";
+        } else {
+            title.innerText = "修改紀錄";
+            document.getElementById("inputStart").value = records[index].start;
+            document.getElementById("inputEnd").value = records[index].end;
+            delBtn.style.display = "block";
+        }
+        modal.style.display = "flex";
+    }
 
-function addRecord(){
-let start=prompt("請選擇入境日期 (YYYY-MM-DD)");
-let end=prompt("請選擇出境日期 (YYYY-MM-DD)");
-if(!start||!end)return;
-records.push({start,end});
-save();
-renderRecords();
-render();
-}
+    function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+    }
 
-function renderRecords(){
-let list=document.getElementById("recordList");
-list.innerHTML="";
-records.forEach((r,i)=>{
-let div=document.createElement("div");
-div.className="record-item";
-div.innerText=`${r.start.replace(/-/g,"/")} ~ ${r.end.replace(/-/g,"/")}`;
-div.onclick=()=>{
-let newStart=prompt("修改入境日期",r.start);
-let newEnd=prompt("修改出境日期",r.end);
-if(newStart&&newEnd){
-records[i]={start:newStart,end:newEnd};
-save();
-renderRecords();
-render();
-}
-};
-list.appendChild(div);
-});
-}
+    function saveRecord() {
+        const start = document.getElementById("inputStart").value;
+        const end = document.getElementById("inputEnd").value;
+        if (!start || !end) return alert("請選擇日期");
+        if (new Date(start) > new Date(end)) return alert("出境日期不能早於入境日期");
 
-function daysBetween(d1,d2){
-return Math.floor((d2-d1)/(1000*60*60*24));
-}
+        if (editingIndex === -1) {
+            records.push({ start, end });
+        } else {
+            records[editingIndex] = { start, end };
+        }
+        
+        records.sort((a, b) => new Date(a.start) - new Date(b.start));
+        saveToLocal();
+        closeModal('editModal');
+        renderRecordList();
+        render();
+    }
 
-function getRemaining(date){
-let used=0;
-let start180=new Date(date);
-start180.setDate(start180.getDate()-179);
+    function deleteRecord() {
+        if (confirm("確定要刪除這筆紀錄嗎？")) {
+            records.splice(editingIndex, 1);
+            saveToLocal();
+            closeModal('editModal');
+            renderRecordList();
+            render();
+        }
+    }
 
-records.forEach(r=>{
-let s=new Date(r.start);
-let e=new Date(r.end);
-if(e<start180||s>date)return;
-let from=s<start180?start180:s;
-let to=e>date?date:e;
-used+=daysBetween(from,to)+1;
-});
-return 90-used;
-}
+    function renderRecordList() {
+        const list = document.getElementById("recordList");
+        list.innerHTML = records.length === 0 ? "<p style='color:#999'>目前無紀錄</p>" : "";
+        records.forEach((r, i) => {
+            const div = document.createElement("div");
+            div.className = "record-item";
+            div.innerText = `${r.start.replace(/-/g, "/")} ~ ${r.end.replace(/-/g, "/")}`;
+            div.onclick = () => openEditModal(i);
+            list.appendChild(div);
+        });
+    }
 
-function renderMonth(year,month){
-let container=document.createElement("div");
+    // 計算邏輯
+    function getRemaining(checkDate) {
+        let used = 0;
+        let windowStart = new Date(checkDate);
+        windowStart.setDate(windowStart.getDate() - 179);
 
-let title=document.createElement("div");
-title.className="month-title";
-title.innerText=`${year}年 ${month+1}月`;
-container.appendChild(title);
+        records.forEach(r => {
+            let s = new Date(r.start);
+            let e = new Date(r.end);
+            if (e < windowStart || s > checkDate) return;
+            let actualStart = s < windowStart ? windowStart : s;
+            let actualEnd = e > checkDate ? checkDate : e;
+            used += Math.floor((actualEnd - actualStart) / (1000 * 60 * 60 * 24)) + 1;
+        });
+        return 90 - used;
+    }
 
-let weekdays=document.createElement("div");
-weekdays.className="weekdays";
-weekdays.innerHTML="日一二三四五六".split("").map(d=>`<div>${d}</div>`).join("");
-container.appendChild(weekdays);
+    function renderMonth(year, month) {
+        const container = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "month-title";
+        title.innerText = `${year}年 ${month + 1}月`;
+        container.appendChild(title);
 
-let cal=document.createElement("div");
-cal.className="calendar";
+        const weekdays = document.createElement("div");
+        weekdays.className = "weekdays";
+        weekdays.innerHTML = "日一二三四五六".split("").map(d => `<div>${d}</div>`).join("");
+        container.appendChild(weekdays);
 
-let first=new Date(year,month,1);
-let last=new Date(year,month+1,0);
+        const cal = document.createElement("div");
+        cal.className = "calendar";
 
-for(let i=0;i<first.getDay();i++){
-cal.appendChild(document.createElement("div"));
-}
+        const first = new Date(year, month, 1);
+        const last = new Date(year, month + 1, 0);
 
-for(let d=1;d<=last.getDate();d++){
-let date=new Date(year,month,d);
-let cell=document.createElement("div");
-cell.className="day";
+        for (let i = 0; i < first.getDay(); i++) {
+            cal.appendChild(document.createElement("div")).className = "day";
+        }
 
-let span=document.createElement("span");
-span.innerText=d;
-cell.appendChild(span);
+        for (let d = 1; d <= last.getDate(); d++) {
+            const date = new Date(year, month, d);
+            const dateStr = date.toISOString().split('T')[0];
+            const cell = document.createElement("div");
+            cell.className = "day";
 
-let remain=getRemaining(date);
-let remainDiv=document.createElement("div");
-remainDiv.className="remaining";
-remainDiv.innerText=remain;
-if(remain<0)remainDiv.classList.add("danger");
-else if(remain<10)remainDiv.classList.add("warning");
-cell.appendChild(remainDiv);
+            const span = document.createElement("span");
+            span.innerText = d;
+            cell.appendChild(span);
 
-records.forEach(r=>{
-let s=new Date(r.start);
-let e=new Date(r.end);
-if(date>=s&&date<=e){
-cell.classList.add("stay");
-if(date.getTime()==s.getTime())cell.classList.add("stay-start");
-if(date.getTime()==e.getTime())cell.classList.add("stay-end");
-}
-});
+            const remain = getRemaining(date);
+            const remainDiv = document.createElement("div");
+            remainDiv.className = "remaining";
+            remainDiv.innerText = remain;
+            if (remain < 0) remainDiv.classList.add("danger");
+            else if (remain < 10) remainDiv.classList.add("warning");
+            cell.appendChild(remainDiv);
 
-cal.appendChild(cell);
-}
+            // 標示停留區間
+            records.forEach(r => {
+                if (dateStr >= r.start && dateStr <= r.end) {
+                    cell.classList.add("stay");
+                    if (dateStr === r.start) cell.classList.add("stay-start");
+                    if (dateStr === r.end) cell.classList.add("stay-end");
+                }
+            });
 
-container.appendChild(cal);
-return container;
-}
+            cal.appendChild(cell);
+        }
+        container.appendChild(cal);
+        return container;
+    }
 
-function render(){
-let c=document.getElementById("calendarContainer");
-c.innerHTML="";
-let y=currentDate.getFullYear();
-let m=currentDate.getMonth();
-document.getElementById("currentMonth").innerText=`${y}年 ${m+1}月`;
-c.appendChild(renderMonth(y,m));
-c.appendChild(renderMonth(y,m+1));
-}
+    function render() {
+        const c = document.getElementById("calendarContainer");
+        c.innerHTML = "";
+        const y = currentDate.getFullYear();
+        const m = currentDate.getMonth();
+        document.getElementById("currentMonthLabel").innerText = `${y}年 ${m + 1}月`;
+        c.appendChild(renderMonth(y, m));
+        c.appendChild(renderMonth(y, m + 1));
+    }
 
-render();
+    render();
 </script>
 </body>
 </html>
