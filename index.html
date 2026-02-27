@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>申根計算器 V3.0 Premium</title>
+    <title>申根計算器 V3.1 Premium</title>
     <style>
         :root { 
             --primary: #1a2a6c; --stay-color: #b3c7ff; --accent: #ff4757; --warning: #ffa500; --success: #28a745;
@@ -40,10 +40,9 @@
         .day { background: white; height: 42px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; box-sizing: border-box; }
         .day span { position: absolute; top: 1px; left: 3px; font-size: 14px; font-weight: 600; color: #333; }
         
-        /* 剩餘天數樣式與顏色邏輯 */
         .remain { position: absolute; right: 1.5px; bottom: 1px; font-size: 10px; color: #888; font-weight: bold; }
-        .rem-warn { color: var(--warning) !important; font-size: 11px; } /* 小於10天橘色 */
-        .rem-danger { color: var(--accent) !important; font-size: 11px; } /* 小於等於0天紅色 */
+        .rem-warn { color: var(--warning) !important; font-size: 11px; }
+        .rem-danger { color: var(--accent) !important; font-size: 11px; }
 
         .note-tag { position: absolute; left: 2px; bottom: 1px; font-size: 9px; color: #5dade2; font-weight: bold; max-width: 65%; overflow: hidden; white-space: nowrap; }
         .stay { background: var(--stay-color) !important; }
@@ -93,7 +92,7 @@
         <h3 id="editT" style="margin-top:0; color:var(--primary); margin-bottom:20px;">新增區段</h3>
         <div class="form-row"><label>入境</label><input type="date" id="iStart"></div>
         <div class="form-row"><label>出境</label><input type="date" id="iEnd"></div>
-        <div class="form-row"><label>備註</label><input type="text" id="iNote" placeholder="例如: 德國 SPS"></div>
+        <div class="form-row"><label>備註</label><input type="text" id="iNote" placeholder="例如: 團型 "></div>
         <button class="main-btn" onclick="save()">儲存</button>
         <button id="delB" class="back-btn" style="background:var(--accent); color:white; margin-top:8px; font-size:14px;" onclick="del()">🗑️ 刪除紀錄</button>
         <button class="back-btn" style="font-size:14px;" onclick="hide('mEdit')">取消</button>
@@ -115,26 +114,39 @@
         if(idx === -1) { document.getElementById('iStart').value=''; document.getElementById('iEnd').value=''; document.getElementById('iNote').value=''; }
         else { document.getElementById('iStart').value=data[idx].s; document.getElementById('iEnd').value=data[idx].e; document.getElementById('iNote').value=data[idx].n || ''; }
     }
+
+    // 儲存時進行反向排序 (新日期在上)
     function save() {
         const s = document.getElementById('iStart').value, e = document.getElementById('iEnd').value, n = document.getElementById('iNote').value;
         if(!s || !e) return;
         if(new Date(s) > new Date(e)) { alert("入境日期不能晚於出境日期"); return; }
-        if(editIdx === -1) data.push({s, e, n}); else data[editIdx] = {s, e, n};
-        data.sort((a,b)=>new Date(a.s)-new Date(b.s));
+        
+        if(editIdx === -1) data.push({s, e, n}); 
+        else data[editIdx] = {s, e, n};
+
+        // 核心改動：改為 (b - a) 遞減排序
+        data.sort((a,b) => new Date(b.s) - new Date(a.s));
+        
         localStorage.setItem("schengen_data_v5", JSON.stringify(data));
         hide('mEdit'); renderList(); render();
     }
+
     function del() { if(confirm("確定刪除？")) { data.splice(editIdx,1); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); hide('mEdit'); renderList(); render(); } }
+    
     function renderList() {
+        // 確保顯示前也是排序過的狀態
+        data.sort((a,b) => new Date(b.s) - new Date(a.s));
         document.getElementById('listItems').innerHTML = data.length === 0 ? '<p style="color:#999;text-align:center;">尚無紀錄</p>' : 
             data.map((item, i)=> `<div class="record-card" onclick="showEdit(${i})"><b>${item.s.replace(/-/g,'/')} ~ ${item.e.replace(/-/g,'/')}</b><br><small>${item.n||''}</small></div>`).join('');
     }
+
     function exportData() {
         const el = document.createElement('textarea'); el.value = JSON.stringify(data); document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); alert("已複製！");
     }
     function importData() {
-        const c = prompt("貼上代碼："); if(c) { try{ data = JSON.parse(c); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); render(); renderList(); alert("導入成功"); } catch(e){ alert("代碼錯誤"); } }
+        const c = prompt("貼上代碼："); if(c) { try{ data = JSON.parse(c); data.sort((a,b) => new Date(b.s) - new Date(a.s)); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); render(); renderList(); alert("導入成功"); } catch(e){ alert("代碼錯誤"); } }
     }
+
     function getRem(targetDate) {
         let used = 0;
         let d = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
@@ -156,11 +168,8 @@
             let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
             let date = new Date(y, m, i);
             let rem = getRem(date), cls = "", remCls = "remain", note = "";
-            
-            // 加入警示顏色邏輯
             if (rem <= 0) remCls += " rem-danger";
             else if (rem < 10) remCls += " rem-warn";
-
             data.forEach(r => { if(dStr >= r.s && dStr <= r.e) { cls += " stay"; if(dStr===r.s) { cls+=" stay-start"; note = r.n || ""; } if(dStr===r.e) cls+=" stay-end"; }});
             html += `<div class="day ${cls}"><span>${i}</span><div class="note-tag">${note}</div><div class="${remCls}">${rem}</div></div>`;
         }
