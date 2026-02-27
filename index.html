@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schengen Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <button id="prevMonth">◀</button>
+  <h1 id="monthLabel"></h1>
+  <button id="nextMonth">▶</button>
+  <button id="openRecords">紀錄</button>
+</header>
+
+<div id="calendarContainer"></div>
+
+<!-- 紀錄頁 -->
+<div id="recordPanel" class="hidden">
+  <div class="panelContent">
+    <h2>出入境紀錄</h2>
+
+    <button id="addRecord">新增</button>
+    <div id="recordList"></div>
+
+    <button id="closeRecords">關閉</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
