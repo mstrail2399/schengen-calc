@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <title>Schengen Pro</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="申根計算">
-    
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/mstrail2399/schengen-calc/main/icon.png?v=1">
     <link rel="icon" href="https://raw.githubusercontent.com/mstrail2399/schengen-calc/main/icon.png?v=1">
     
@@ -17,7 +15,6 @@
             --primary: #1a2a6c; --stay-color: #b3c7ff; --accent: #ff4757; --warning: #ffa500; --success: #28a745;
             --bg: #fdfdfd; --text: #333; --card: #f0f4ff; --border: #ddd; --modal: #fff; --footer-text: #1a2a6c;
         }
-
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg: #1a1a1a; --text: #eee; --card: #2c2c2e; --border: #444; --modal: #2c2c2e;
@@ -27,71 +24,36 @@
             input { background: #3a3a3c !important; color: white !important; border-color: #444 !important; }
             .day { background: #1a1a1a !important; border-color: #333 !important; }
             .day span { color: #eee !important; }
-            .nav-btn, .today-btn { background: #333 !important; border: 1px solid #444 !important; }
+            .nav-btn, .today-btn, .step-btn { background: #333 !important; border: 1px solid #444 !important; color: white !important; }
             .record-btn { background: transparent !important; color: white !important; border-color: white !important; }
             .back-btn { background: #3a3a3c !important; color: white !important; }
-            .footer-summary { background: var(--card) !important; }
         }
-
         body { background: #222; margin: 0; display: flex; justify-content: center; font-family: -apple-system, sans-serif; color: var(--text); }
         .app { width: 390px; height: 100vh; background: var(--bg); padding: env(safe-area-inset-top) 10px 8px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
-        
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 2px; }
         .month-display { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; }
         .today-btn { background: #eee; border: 1px solid #ccc; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; line-height: 1; }
         .nav-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-
         .record-btn { background: white; color: var(--primary); border: 1.5px solid var(--primary); width: 100%; padding: 10px; border-radius: 10px; font-size: 14px; margin: 8px 0; font-weight: bold; cursor: pointer; }
-
         .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--primary); color: white; font-weight: bold; text-align: center; padding: 4px 0; font-size: 12px; }
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; border-left: 1px solid var(--border); border-top: 1px solid var(--border); margin-bottom: 5px; }
         .day { background: white; height: 42px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; box-sizing: border-box; }
         .day span { position: absolute; top: 1px; left: 3px; font-size: 14px; font-weight: 600; color: #333; }
-        
         .remain { position: absolute; right: 1.5px; bottom: 1px; font-size: 10px; color: #888; font-weight: bold; }
         .rem-warn { color: var(--warning) !important; font-size: 11px; }
         .rem-danger { color: var(--accent) !important; font-size: 11px; }
-
         .note-tag { position: absolute; left: 2px; bottom: 1px; font-size: 9px; color: #5dade2; font-weight: bold; max-width: 65%; overflow: hidden; white-space: nowrap; }
         .stay { background: var(--stay-color) !important; }
         .stay-start { border-radius: 8px 0 0 8px; }
         .stay-end { border-radius: 0 8px 8px 0; }
 
-        .footer-summary { 
-            margin-top: auto; 
-            padding: 12px 5px; 
-            background: var(--card); 
-            border-top: 1px solid var(--border); 
-            text-align: center; 
-            border-radius: 15px 15px 0 0;
-            flex-shrink: 0;
-        }
-        .footer-line { 
-            margin: 4px 0; 
-            font-size: 13px; 
-            font-weight: bold; 
-            color: var(--footer-text); 
-            white-space: nowrap; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 2px;
-        }
+        /* 底部樣式 */
+        .footer-summary { margin-top: auto; padding: 12px 5px; background: var(--card); border-top: 1px solid var(--border); border-radius: 15px 15px 0 0; flex-shrink: 0; }
+        .footer-line { margin: 4px 0; font-size: 13px; font-weight: bold; color: var(--footer-text); white-space: nowrap; display: flex; justify-content: center; align-items: center; gap: 4px; }
         .footer-line span { color: var(--accent); font-size: 14.5px; }
-        
-        .calc-input {
-            width: 45px;
-            background: rgba(128, 128, 128, 0.1);
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            color: var(--accent);
-            font-weight: 900;
-            font-size: 16px;
-            text-align: center;
-            padding: 2px 0;
-            outline: none;
-            -webkit-appearance: none;
-        }
+        .calc-input-group { display: flex; align-items: center; gap: 5px; }
+        .calc-input { width: 45px; background: rgba(128, 128, 128, 0.1); border: 1px solid var(--border); border-radius: 5px; color: var(--accent); font-weight: 900; font-size: 16px; text-align: center; padding: 2px 0; outline: none; }
+        .step-btn { background: #eee; border: 1px solid #ccc; border-radius: 4px; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
         .modal-content { background: var(--modal); width: 100%; max-width: 340px; padding: 18px; border-radius: 20px; box-sizing: border-box; color: var(--text); }
@@ -109,31 +71,33 @@
 <div class="app">
     <div class="header">
         <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
-        <div class="month-display">
-            <span id="mLabel"></span>
-            <div class="today-btn" onclick="goToday()">🧋</div>
-        </div>
+        <div class="month-display"><span id="mLabel"></span><div class="today-btn" onclick="goToday()">🧋</div></div>
         <button class="nav-btn" onclick="changeMonth(1)">▶</button>
     </div>
     <button class="record-btn" onclick="showList()">📋 出入境紀錄管理</button>
-    
     <div id="calBox" style="overflow-y: auto; flex: 1;"></div>
-
-    <div class="footer-summary" id="footerSummary"></div>
+    <div class="footer-summary" id="footerSummary">
+        <div class="footer-line" id="line1">載入中...</div>
+        <div class="footer-line">
+            若需入境 
+            <div class="calc-input-group">
+                <button class="step-btn" onclick="stepDays(-1)">-</button>
+                <input type="tel" id="targetDays" class="calc-input" value="" oninput="updateTargetDays(this.value)" placeholder="0">
+                <button class="step-btn" onclick="stepDays(1)">+</button>
+            </div>
+            天，最快可自 <span id="earliestDate">----/--/--</span> 起入境
+        </div>
+    </div>
 </div>
 
 <div id="mList" class="modal" onclick="if(event.target==this)hide('mList')">
     <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0">歷史紀錄</h3>
-            <button onclick="showEdit(-1)" style="background:var(--success); color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:800; font-size:15px;">+ 新增</button>
-        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 style="margin:0">歷史紀錄</h3><button onclick="showEdit(-1)" style="background:var(--success); color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:800; font-size:15px;">+ 新增</button></div>
         <div id="listItems" style="max-height:220px; overflow-y:auto;"></div>
         <div class="backup-group"><button class="sec-btn" onclick="exportData()">💾 備份</button><button class="sec-btn" onclick="importData()">🔄 還原</button></div>
         <button class="back-btn" onclick="hide('mList')">🔙 回前頁</button>
     </div>
 </div>
-
 <div id="mEdit" class="modal">
     <div class="modal-content">
         <h3 id="editT" style="margin-top:0; color:var(--primary); margin-bottom:20px;">新增區段</h3>
@@ -150,36 +114,35 @@
     let cur = new Date();
     let data = JSON.parse(localStorage.getItem("schengen_data_v5") || "[]");
     let editIdx = -1;
-    let targetTravelDays = 90;
 
     function hide(id) { document.getElementById(id).style.display='none'; }
     function changeMonth(n) { cur.setMonth(cur.getMonth()+n); render(); }
     function goToday() { cur = new Date(); render(); }
     function showList() { document.getElementById('mList').style.display='flex'; renderList(); }
     
-    function showEdit(idx) {
-        editIdx = idx; document.getElementById('mEdit').style.display='flex';
-        document.getElementById('delB').style.display = idx === -1 ? 'none' : 'block';
-        if(idx === -1) { document.getElementById('iStart').value=''; document.getElementById('iEnd').value=''; document.getElementById('iNote').value=''; }
-        else { document.getElementById('iStart').value=data[idx].s; document.getElementById('iEnd').value=data[idx].e; document.getElementById('iNote').value=data[idx].n || ''; }
-    }
-
     function save() {
         const s = document.getElementById('iStart').value, e = document.getElementById('iEnd').value, n = document.getElementById('iNote').value;
         if(!s || !e) return;
-        if(new Date(s) > new Date(e)) { alert("入境日期不能晚於出境日期"); return; }
+        if(new Date(s) > new Date(e)) { alert("日期錯誤"); return; }
         if(editIdx === -1) data.push({s, e, n}); else data[editIdx] = {s, e, n};
         data.sort((a,b) => new Date(b.s) - new Date(a.s));
         localStorage.setItem("schengen_data_v5", JSON.stringify(data));
-        hide('mEdit'); renderList(); render();
+        hide('mEdit'); render();
     }
 
-    function del() { if(confirm("確定刪除？")) { data.splice(editIdx,1); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); hide('mEdit'); renderList(); render(); } }
+    function del() { if(confirm("確定刪除？")) { data.splice(editIdx,1); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); hide('mEdit'); render(); } }
 
     function renderList() {
         data.sort((a,b) => new Date(b.s) - new Date(a.s));
         document.getElementById('listItems').innerHTML = data.length === 0 ? '<p style="color:#999;text-align:center;">尚無紀錄</p>' : 
             data.map((item, i)=> `<div class="record-card" onclick="showEdit(${i})"><b>${item.s.replace(/-/g,'/')} ~ ${item.e.replace(/-/g,'/')}</b><br><small>${item.n||''}</small></div>`).join('');
+    }
+    
+    function showEdit(idx) {
+        editIdx = idx; document.getElementById('mEdit').style.display='flex';
+        document.getElementById('delB').style.display = idx === -1 ? 'none' : 'block';
+        if(idx === -1) { document.getElementById('iStart').value=''; document.getElementById('iEnd').value=''; document.getElementById('iNote').value=''; }
+        else { document.getElementById('iStart').value=data[idx].s; document.getElementById('iEnd').value=data[idx].e; document.getElementById('iNote').value=data[idx].n || ''; }
     }
 
     function getRem(targetDate) {
@@ -195,76 +158,86 @@
         return 90 - used;
     }
 
-    // 關鍵修正：回推邏輯
+    // 關鍵搜尋邏輯
     function findEarliestEntry(daysNeeded) {
-        if (!daysNeeded || daysNeeded <= 0) return "請輸入天數";
+        if (!daysNeeded || daysNeeded <= 0) return "----/--/--";
         if (data.length === 0) return "請輸入紀錄";
         
-        let lastDateStr = data.reduce((max, item) => item.e > max ? item.e : max, data[0].e);
-        let checkStart = new Date(lastDateStr);
-        checkStart.setDate(checkStart.getDate() + 1);
+        const lastDateStr = data.reduce((max, item) => item.e > max ? item.e : max, data[0].e);
+        const lastDate = new Date(lastDateStr);
+        const day1AfterLast = new Date(lastDate); day1AfterLast.setDate(day1AfterLast.getDate() + 1);
 
-        // 搜尋未來 2 年內
+        // 判斷 5：檢查最後紀錄後 30 天內是否有不符合的情況
+        let allOkIn30Days = true;
+        for (let i = 0; i < 30; i++) {
+            let checkD = new Date(day1AfterLast); checkD.setDate(checkD.getDate() + i);
+            if (getRem(checkD) < daysNeeded) { allOkIn30Days = false; break; }
+        }
+        
+        // 若 30 天內都符合需求，直接返回最後一筆紀錄 + 1 天
+        if (allOkIn30Days) {
+            return day1AfterLast.getFullYear() + "/" + String(day1AfterLast.getMonth()+1).padStart(2,'0') + "/" + String(day1AfterLast.getDate()).padStart(2,'0');
+        }
+
+        // 否則，執行滾動回推搜尋
         for (let i = 0; i < 730; i++) {
-            let d = new Date(checkStart);
-            d.setDate(d.getDate() + i);
-            
-            // 找到第一個「剩餘天數 >= 需求天數」的日子 (能量蓄滿日)
+            let d = new Date(day1AfterLast); d.setDate(d.getDate() + i);
             if (getRem(d) >= daysNeeded) {
-                // 從那天往回倒推 daysNeeded - 1 天
                 let entryDate = new Date(d);
                 entryDate.setDate(entryDate.getDate() - (daysNeeded - 1));
                 
-                // 再次驗證：確保從這天開始待 N 天，每天都合法
+                // 確保此日期絕對大於最後一筆紀錄日期
+                if (entryDate <= lastDate) entryDate = day1AfterLast;
+
                 let isValid = true;
                 for (let k = 0; k < daysNeeded; k++) {
-                    let testD = new Date(entryDate);
-                    testD.setDate(testD.getDate() + k);
+                    let testD = new Date(entryDate); testD.setDate(testD.getDate() + k);
                     if (getRem(testD) <= 0) { isValid = false; break; }
                 }
-                
-                if (isValid) {
-                    return entryDate.getFullYear() + "/" + String(entryDate.getMonth()+1).padStart(2,'0') + "/" + String(entryDate.getDate()).padStart(2,'0');
-                }
+                if (isValid) return entryDate.getFullYear() + "/" + String(entryDate.getMonth()+1).padStart(2,'0') + "/" + String(entryDate.getDate()).padStart(2,'0');
             }
         }
         return "無可用日期";
     }
 
-    function updateFooterSummary() {
-        const footer = document.getElementById('footerSummary');
-        if (data.length === 0) {
-            footer.innerHTML = "<p style='color:var(--footer-text);font-size:14px;'>尚未輸入任何紀錄</p>";
-            return;
-        }
-
-        let lastDateStr = data.reduce((max, item) => item.e > max ? item.e : max, data[0].e);
-        let rem = getRem(new Date(lastDateStr));
-        let line1 = `統計到 ${lastDateStr.replace(/-/g,'/')}，${rem > 0 ? '尚可入境 <span>'+rem+'</span> 天' : '可入境天數已用完'}`;
-
-        let earliestDate = findEarliestEntry(targetTravelDays);
-        let line2 = `若需入境 <input type="tel" class="calc-input" value="${targetTravelDays}" oninput="updateTargetDays(this.value)"> 天，最快可自 (<span>${earliestDate}</span>) 起入境`;
-
-        footer.innerHTML = `<div class="footer-line">${line1}</div><div class="footer-line">${line2}</div>`;
+    function updateTargetDays(val) {
+        const days = parseInt(val) || 0;
+        document.getElementById('earliestDate').innerText = findEarliestEntry(days);
     }
 
-    function updateTargetDays(val) {
-        targetTravelDays = parseInt(val) || 0;
-        updateFooterSummary();
+    function stepDays(n) {
+        const input = document.getElementById('targetDays');
+        let current = parseInt(input.value) || 0;
+        current = Math.max(0, current + n);
+        input.value = current === 0 ? "" : current;
+        updateTargetDays(input.value);
+    }
+
+    function render() {
+        document.getElementById('mLabel').innerText = `${cur.getFullYear()}年 ${cur.getMonth()+1}月`;
+        // 修正 13 月問題
+        const m1Y = cur.getFullYear(), m1M = cur.getMonth();
+        const m2Date = new Date(m1Y, m1M + 1, 1);
+        document.getElementById('calBox').innerHTML = renderMonth(m1Y, m1M) + renderMonth(m2Date.getFullYear(), m2Date.getMonth());
+        
+        // 更新第一排文字
+        if (data.length > 0) {
+            const lastDateStr = data.reduce((max, item) => item.e > max ? item.e : max, data[0].e);
+            const rem = getRem(new Date(lastDateStr));
+            document.getElementById('line1').innerHTML = `統計到 ${lastDateStr.replace(/-/g,'/')}，${rem > 0 ? '尚可入境 <span>'+rem+'</span> 天' : '可入境天數已用完'}`;
+            updateTargetDays(document.getElementById('targetDays').value);
+        } else {
+            document.getElementById('line1').innerText = "尚無紀錄";
+        }
     }
 
     function renderMonth(y, m) {
-        // 月份修正：處理進位
-        let d = new Date(y, m);
-        let realY = d.getFullYear();
-        let realM = d.getMonth();
-        
-        let html = `<div style="text-align:center;font-weight:bold;margin:8px 0 4px; color:#777;font-size:14px;">${realY}年 ${realM+1}月</div><div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div><div class="calendar">`;
-        let f = new Date(realY, realM, 1).getDay(), l = new Date(realY, realM+1, 0).getDate();
+        let html = `<div style="text-align:center;font-weight:bold;margin:8px 0 4px; color:#777;font-size:14px;">${y}年 ${m+1}月</div><div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div><div class="calendar">`;
+        let f = new Date(y, m, 1).getDay(), l = new Date(y, m+1, 0).getDate();
         for(let i=0; i<f; i++) html += `<div class="day"></div>`;
         for(let i=1; i<=l; i++) {
-            let dStr = `${realY}-${String(realM+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            let date = new Date(realY, realM, i);
+            let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            let date = new Date(y, m, i);
             let rem = getRem(date), cls = "", remCls = "remain", note = "";
             if (rem <= 0) remCls += " rem-danger"; else if (rem < 10) remCls += " rem-warn";
             data.forEach(r => { if(dStr >= r.s && dStr <= r.e) { cls += " stay"; if(dStr===r.s) { cls+=" stay-start"; note = r.n || ""; } if(dStr===r.e) cls+=" stay-end"; }});
@@ -273,18 +246,8 @@
         return html + `</div>`;
     }
 
-    function render() {
-        document.getElementById('mLabel').innerText = `${cur.getFullYear()}年 ${cur.getMonth()+1}月`;
-        document.getElementById('calBox').innerHTML = renderMonth(cur.getFullYear(), cur.getMonth()) + renderMonth(cur.getFullYear(), cur.getMonth()+1);
-        updateFooterSummary();
-    }
-
-    function exportData() {
-        const el = document.createElement('textarea'); el.value = JSON.stringify(data); document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); alert("已複製！");
-    }
-    function importData() {
-        const c = prompt("貼上代碼："); if(c) { try{ data = JSON.parse(c); data.sort((a,b) => new Date(b.s) - new Date(a.s)); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); render(); renderList(); alert("導入成功"); } catch(e){ alert("代碼錯誤"); } }
-    }
+    function exportData() { const el = document.createElement('textarea'); el.value = JSON.stringify(data); document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); alert("已複製！"); }
+    function importData() { const c = prompt("貼上代碼："); if(c) { try{ data = JSON.parse(c); data.sort((a,b) => new Date(b.s) - new Date(a.s)); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); render(); alert("導入成功"); } catch(e){ alert("代碼錯誤"); } } }
 
     render();
 </script>
