@@ -57,6 +57,19 @@
         .stay-start { border-radius: 8px 0 0 8px; }
         .stay-end { border-radius: 0 8px 8px 0; }
 
+        /* 底部統計欄位 */
+        .footer-summary { 
+            margin-top: auto; 
+            padding: 15px; 
+            background: var(--card); 
+            border-top: 1px solid var(--border); 
+            text-align: center; 
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .footer-summary p { margin: 0; font-size: 15px; font-weight: bold; color: var(--primary); line-height: 1.4; }
+        .footer-summary span { color: var(--accent); font-size: 18px; }
+
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
         .modal-content { background: var(--modal); width: 100%; max-width: 340px; padding: 18px; border-radius: 20px; box-sizing: border-box; color: var(--text); }
         .form-row { display: flex; align-items: center; margin-bottom: 15px; gap: 4px; }
@@ -80,7 +93,12 @@
         <button class="nav-btn" onclick="changeMonth(1)">▶</button>
     </div>
     <button class="record-btn" onclick="showList()">📋 出入境紀錄管理</button>
-    <div id="calBox" style="overflow-y: auto;"></div>
+    
+    <div id="calBox" style="overflow-y: auto; flex: 1;"></div>
+
+    <div class="footer-summary" id="footerSummary">
+        <p>計算中...</p>
+    </div>
 </div>
 
 <div id="mList" class="modal" onclick="if(event.target==this)hide('mList')">
@@ -100,7 +118,7 @@
         <h3 id="editT" style="margin-top:0; color:var(--primary); margin-bottom:20px;">新增區段</h3>
         <div class="form-row"><label>入境</label><input type="date" id="iStart"></div>
         <div class="form-row"><label>出境</label><input type="date" id="iEnd"></div>
-        <div class="form-row"><label>備註</label><input type="text" id="iNote" placeholder="例如: 團型"></div>
+        <div class="form-row"><label>備註</label><input type="text" id="iNote" placeholder="例如: 德國 SPS"></div>
         <button class="main-btn" onclick="save()">儲存</button>
         <button id="delB" class="back-btn" style="background:var(--accent); color:white; margin-top:8px; font-size:14px;" onclick="del()">🗑️ 刪除紀錄</button>
         <button class="back-btn" style="font-size:14px;" onclick="hide('mEdit')">取消</button>
@@ -108,20 +126,22 @@
 </div>
 
 <script>
-    /* JS 部分保持 V3.1 的邏輯 (含反向排序) */
     let cur = new Date();
     let data = JSON.parse(localStorage.getItem("schengen_data_v5") || "[]");
     let editIdx = -1;
+
     function hide(id) { document.getElementById(id).style.display='none'; }
     function changeMonth(n) { cur.setMonth(cur.getMonth()+n); render(); }
     function goToday() { cur = new Date(); render(); }
     function showList() { document.getElementById('mList').style.display='flex'; renderList(); }
+    
     function showEdit(idx) {
         editIdx = idx; document.getElementById('mEdit').style.display='flex';
         document.getElementById('delB').style.display = idx === -1 ? 'none' : 'block';
         if(idx === -1) { document.getElementById('iStart').value=''; document.getElementById('iEnd').value=''; document.getElementById('iNote').value=''; }
         else { document.getElementById('iStart').value=data[idx].s; document.getElementById('iEnd').value=data[idx].e; document.getElementById('iNote').value=data[idx].n || ''; }
     }
+
     function save() {
         const s = document.getElementById('iStart').value, e = document.getElementById('iEnd').value, n = document.getElementById('iNote').value;
         if(!s || !e) return;
@@ -131,18 +151,15 @@
         localStorage.setItem("schengen_data_v5", JSON.stringify(data));
         hide('mEdit'); renderList(); render();
     }
+
     function del() { if(confirm("確定刪除？")) { data.splice(editIdx,1); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); hide('mEdit'); renderList(); render(); } }
+
     function renderList() {
         data.sort((a,b) => new Date(b.s) - new Date(a.s));
         document.getElementById('listItems').innerHTML = data.length === 0 ? '<p style="color:#999;text-align:center;">尚無紀錄</p>' : 
             data.map((item, i)=> `<div class="record-card" onclick="showEdit(${i})"><b>${item.s.replace(/-/g,'/')} ~ ${item.e.replace(/-/g,'/')}</b><br><small>${item.n||''}</small></div>`).join('');
     }
-    function exportData() {
-        const el = document.createElement('textarea'); el.value = JSON.stringify(data); document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); alert("已複製！");
-    }
-    function importData() {
-        const c = prompt("貼上代碼："); if(c) { try{ data = JSON.parse(c); data.sort((a,b) => new Date(b.s) - new Date(a.s)); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); render(); renderList(); alert("導入成功"); } catch(e){ alert("代碼錯誤"); } }
-    }
+
     function getRem(targetDate) {
         let used = 0;
         let d = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
@@ -155,6 +172,22 @@
         });
         return 90 - used;
     }
+
+    function updateFooterSummary() {
+        const footer = document.getElementById('footerSummary');
+        if (data.length === 0) {
+            footer.innerHTML = "<p>尚未輸入任何紀錄</p>";
+            return;
+        }
+        let lastDateStr = data.reduce((max, item) => item.e > max ? item.e : max, data[0].e);
+        let rem = getRem(new Date(lastDateStr));
+        if (rem > 0) {
+            footer.innerHTML = `<p>統計到 ${lastDateStr.replace(/-/g,'/')}</p><p>尚可入境 <span>${rem}</span> 天</p>`;
+        } else {
+            footer.innerHTML = `<p>統計到 ${lastDateStr.replace(/-/g,'/')}</p><p style="color:var(--accent)">可入境天數已用完</p>`;
+        }
+    }
+
     function renderMonth(y, m) {
         let html = `<div style="text-align:center;font-weight:bold;margin:8px 0 4px; color:#777;font-size:14px;">${y}年 ${m+1}月</div><div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div><div class="calendar">`;
         let f = new Date(y, m, 1).getDay(), l = new Date(y, m+1, 0).getDate();
@@ -169,10 +202,20 @@
         }
         return html + `</div>`;
     }
+
     function render() {
         document.getElementById('mLabel').innerText = `${cur.getFullYear()}年 ${cur.getMonth()+1}月`;
         document.getElementById('calBox').innerHTML = renderMonth(cur.getFullYear(), cur.getMonth()) + renderMonth(cur.getFullYear(), cur.getMonth()+1);
+        updateFooterSummary();
     }
+
+    function exportData() {
+        const el = document.createElement('textarea'); el.value = JSON.stringify(data); document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); alert("已複製！");
+    }
+    function importData() {
+        const c = prompt("貼上代碼："); if(c) { try{ data = JSON.parse(c); data.sort((a,b) => new Date(b.s) - new Date(a.s)); localStorage.setItem("schengen_data_v5", JSON.stringify(data)); render(); renderList(); alert("導入成功"); } catch(e){ alert("代碼錯誤"); } }
+    }
+
     render();
 </script>
 </body>
