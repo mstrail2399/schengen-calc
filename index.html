@@ -72,25 +72,25 @@
             font-weight: bold; 
             color: var(--footer-text); 
             white-space: nowrap; 
-            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 2px;
         }
-        .footer-line span { color: var(--accent); font-size: 15px; }
+        .footer-line span { color: var(--accent); font-size: 14.5px; }
         
         .calc-input {
-            width: 40px;
-            background: #eee;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            color: #d63031;
-            font-weight: bold;
-            font-size: 15px;
+            width: 45px;
+            background: rgba(128, 128, 128, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--accent);
+            font-weight: 900;
+            font-size: 16px;
             text-align: center;
             padding: 2px 0;
             outline: none;
+            -webkit-appearance: none;
         }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
@@ -195,20 +195,38 @@
         return 90 - used;
     }
 
+    // 關鍵修正：回推邏輯
     function findEarliestEntry(daysNeeded) {
+        if (!daysNeeded || daysNeeded <= 0) return "請輸入天數";
         if (data.length === 0) return "請輸入紀錄";
+        
         let lastDateStr = data.reduce((max, item) => item.e > max ? item.e : max, data[0].e);
-        let startFrom = new Date(lastDateStr);
-        startFrom.setDate(startFrom.getDate() + 1); // 從最後一筆紀錄的隔天開始找
+        let checkStart = new Date(lastDateStr);
+        checkStart.setDate(checkStart.getDate() + 1);
 
-        for (let i = 0; i < 400; i++) {
-            let d = new Date(startFrom); d.setDate(d.getDate() + i);
-            let ok = true;
-            for (let j = 0; j < daysNeeded; j++) {
-                let checkDate = new Date(d); checkDate.setDate(checkDate.getDate() + j);
-                if (getRem(checkDate) <= 0) { ok = false; break; }
+        // 搜尋未來 2 年內
+        for (let i = 0; i < 730; i++) {
+            let d = new Date(checkStart);
+            d.setDate(d.getDate() + i);
+            
+            // 找到第一個「剩餘天數 >= 需求天數」的日子 (能量蓄滿日)
+            if (getRem(d) >= daysNeeded) {
+                // 從那天往回倒推 daysNeeded - 1 天
+                let entryDate = new Date(d);
+                entryDate.setDate(entryDate.getDate() - (daysNeeded - 1));
+                
+                // 再次驗證：確保從這天開始待 N 天，每天都合法
+                let isValid = true;
+                for (let k = 0; k < daysNeeded; k++) {
+                    let testD = new Date(entryDate);
+                    testD.setDate(testD.getDate() + k);
+                    if (getRem(testD) <= 0) { isValid = false; break; }
+                }
+                
+                if (isValid) {
+                    return entryDate.getFullYear() + "/" + String(entryDate.getMonth()+1).padStart(2,'0') + "/" + String(entryDate.getDate()).padStart(2,'0');
+                }
             }
-            if (ok) return d.getFullYear() + "/" + String(d.getMonth()+1).padStart(2,'0') + "/" + String(d.getDate()).padStart(2,'0');
         }
         return "無可用日期";
     }
@@ -216,37 +234,37 @@
     function updateFooterSummary() {
         const footer = document.getElementById('footerSummary');
         if (data.length === 0) {
-            footer.innerHTML = "<p style='color:var(--footer-text)'>尚無紀錄</p>";
+            footer.innerHTML = "<p style='color:var(--footer-text);font-size:14px;'>尚未輸入任何紀錄</p>";
             return;
         }
 
         let lastDateStr = data.reduce((max, item) => item.e > max ? item.e : max, data[0].e);
         let rem = getRem(new Date(lastDateStr));
-        let line1 = rem > 0 ? 
-            `統計到 ${lastDateStr.replace(/-/g,'/')}，尚可入境 <span>${rem}</span> 天` : 
-            `統計到 ${lastDateStr.replace(/-/g,'/')}，可入境天數已用完`;
+        let line1 = `統計到 ${lastDateStr.replace(/-/g,'/')}，${rem > 0 ? '尚可入境 <span>'+rem+'</span> 天' : '可入境天數已用完'}`;
 
         let earliestDate = findEarliestEntry(targetTravelDays);
-        let line2 = `若需入境 <input type="number" class="calc-input" value="${targetTravelDays}" oninput="updateTargetDays(this.value)"> 天，最快可自 (<span>${earliestDate}</span>) 起入境`;
+        let line2 = `若需入境 <input type="tel" class="calc-input" value="${targetTravelDays}" oninput="updateTargetDays(this.value)"> 天，最快可自 (<span>${earliestDate}</span>) 起入境`;
 
-        footer.innerHTML = `
-            <div class="footer-line">${line1}</div>
-            <div class="footer-line">${line2}</div>
-        `;
+        footer.innerHTML = `<div class="footer-line">${line1}</div><div class="footer-line">${line2}</div>`;
     }
 
     function updateTargetDays(val) {
         targetTravelDays = parseInt(val) || 0;
-        updateFooterSummary(); // 呼叫更新函數，日期會立即跳動
+        updateFooterSummary();
     }
 
     function renderMonth(y, m) {
-        let html = `<div style="text-align:center;font-weight:bold;margin:8px 0 4px; color:#777;font-size:14px;">${y}年 ${m+1}月</div><div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div><div class="calendar">`;
-        let f = new Date(y, m, 1).getDay(), l = new Date(y, m+1, 0).getDate();
+        // 月份修正：處理進位
+        let d = new Date(y, m);
+        let realY = d.getFullYear();
+        let realM = d.getMonth();
+        
+        let html = `<div style="text-align:center;font-weight:bold;margin:8px 0 4px; color:#777;font-size:14px;">${realY}年 ${realM+1}月</div><div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div><div class="calendar">`;
+        let f = new Date(realY, realM, 1).getDay(), l = new Date(realY, realM+1, 0).getDate();
         for(let i=0; i<f; i++) html += `<div class="day"></div>`;
         for(let i=1; i<=l; i++) {
-            let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            let date = new Date(y, m, i);
+            let dStr = `${realY}-${String(realM+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            let date = new Date(realY, realM, i);
             let rem = getRem(date), cls = "", remCls = "remain", note = "";
             if (rem <= 0) remCls += " rem-danger"; else if (rem < 10) remCls += " rem-warn";
             data.forEach(r => { if(dStr >= r.s && dStr <= r.e) { cls += " stay"; if(dStr===r.s) { cls+=" stay-start"; note = r.n || ""; } if(dStr===r.e) cls+=" stay-end"; }});
