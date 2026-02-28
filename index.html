@@ -15,13 +15,13 @@
     <style>
         :root { 
             --primary: #1a2a6c; --stay-color: #b3c7ff; --accent: #ff4757; --warning: #ffa500; --success: #28a745;
-            --bg: #fdfdfd; --text: #333; --card: #f0f4ff; --border: #ddd; --modal: #fff;
+            --bg: #fdfdfd; --text: #333; --card: #f0f4ff; --border: #ddd; --modal: #fff; --footer-text: #1a2a6c;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg: #1a1a1a; --text: #eee; --card: #2c2c2e; --border: #444; --modal: #2c2c2e;
-                --stay-color: #3a5ba0;
+                --stay-color: #3a5ba0; --footer-text: #ffffff;
             }
             body { background: #000; color: #eee; }
             input { background: #3a3a3c !important; color: white !important; border-color: #444 !important; }
@@ -30,7 +30,7 @@
             .nav-btn, .today-btn { background: #333 !important; border: 1px solid #444 !important; }
             .record-btn { background: transparent !important; color: white !important; border-color: white !important; }
             .back-btn { background: #3a3a3c !important; color: white !important; }
-            .modal-content h3, .form-row label { color: #FFFFFF !important; }
+            .footer-summary { background: #2c2c2e !important; }
         }
 
         body { background: #222; margin: 0; display: flex; justify-content: center; font-family: -apple-system, sans-serif; color: var(--text); }
@@ -57,18 +57,42 @@
         .stay-start { border-radius: 8px 0 0 8px; }
         .stay-end { border-radius: 0 8px 8px 0; }
 
-        /* 底部統計欄位 */
+        /* 底部統計欄位 - 優化版 */
         .footer-summary { 
             margin-top: auto; 
-            padding: 15px; 
+            padding: 12px 5px; 
             background: var(--card); 
             border-top: 1px solid var(--border); 
             text-align: center; 
             border-radius: 15px 15px 0 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
         }
-        .footer-summary p { margin: 0; font-size: 15px; font-weight: bold; color: var(--primary); line-height: 1.4; }
-        .footer-summary span { color: var(--accent); font-size: 18px; }
+        .footer-line { 
+            margin: 4px 0; 
+            font-size: 14px; 
+            font-weight: bold; 
+            color: var(--footer-text); 
+            white-space: nowrap; 
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+        .footer-line span { color: var(--accent); font-size: 16px; }
+        
+        /* 試算輸入框樣式 */
+        .calc-input {
+            width: 35px;
+            background: transparent;
+            border: none;
+            border-bottom: 1.5px solid var(--accent);
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            padding: 0;
+            outline: none;
+        }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
         .modal-content { background: var(--modal); width: 100%; max-width: 340px; padding: 18px; border-radius: 20px; box-sizing: border-box; color: var(--text); }
@@ -97,8 +121,7 @@
     <div id="calBox" style="overflow-y: auto; flex: 1;"></div>
 
     <div class="footer-summary" id="footerSummary">
-        <p>計算中...</p>
-    </div>
+        </div>
 </div>
 
 <div id="mList" class="modal" onclick="if(event.target==this)hide('mList')">
@@ -129,6 +152,7 @@
     let cur = new Date();
     let data = JSON.parse(localStorage.getItem("schengen_data_v5") || "[]");
     let editIdx = -1;
+    let targetTravelDays = 90; // 預設試算天數
 
     function hide(id) { document.getElementById(id).style.display='none'; }
     function changeMonth(n) { cur.setMonth(cur.getMonth()+n); render(); }
@@ -173,19 +197,50 @@
         return 90 - used;
     }
 
+    // 計算最快可入境日期
+    function findEarliestEntry(daysNeeded) {
+        let testDate = new Date(); 
+        // 限制搜尋範圍：從今天起往後找 200 天，通常就能找到。
+        for (let i = 0; i < 365; i++) {
+            let d = new Date(); d.setDate(d.getDate() + i);
+            let ok = true;
+            // 檢查若從這天進入，待滿 daysNeeded 天，每天是否都符合申根規則
+            for (let j = 0; j < daysNeeded; j++) {
+                let checkDate = new Date(d); checkDate.setDate(checkDate.getDate() + j);
+                if (getRem(checkDate) <= 0) { ok = false; break; }
+            }
+            if (ok) return d.getFullYear() + "/" + String(d.getMonth()+1).padStart(2,'0') + "/" + String(d.getDate()).padStart(2,'0');
+        }
+        return "計算中";
+    }
+
     function updateFooterSummary() {
         const footer = document.getElementById('footerSummary');
         if (data.length === 0) {
             footer.innerHTML = "<p>尚未輸入任何紀錄</p>";
             return;
         }
+
+        // 第一排：統計剩餘天數
         let lastDateStr = data.reduce((max, item) => item.e > max ? item.e : max, data[0].e);
         let rem = getRem(new Date(lastDateStr));
-        if (rem > 0) {
-            footer.innerHTML = `<p>統計到 ${lastDateStr.replace(/-/g,'/')}</p><p>尚可入境 <span>${rem}</span> 天</p>`;
-        } else {
-            footer.innerHTML = `<p>統計到 ${lastDateStr.replace(/-/g,'/')}</p><p style="color:var(--accent)">可入境天數已用完</p>`;
-        }
+        let line1 = rem > 0 ? 
+            `統計到 ${lastDateStr.replace(/-/g,'/')}，尚可入境 <span>${rem}</span> 天` : 
+            `統計到 ${lastDateStr.replace(/-/g,'/')}，可入境天數已用完`;
+
+        // 第二排：試算入境日期
+        let earliestDate = findEarliestEntry(targetTravelDays);
+        let line2 = `若需入境 <input type="number" class="calc-input" value="${targetTravelDays}" onchange="updateTargetDays(this.value)"> 天，最快可自 (<span>${earliestDate}</span>) 起入境`;
+
+        footer.innerHTML = `
+            <div class="footer-line">${line1}</div>
+            <div class="footer-line">${line2}</div>
+        `;
+    }
+
+    function updateTargetDays(val) {
+        targetTravelDays = parseInt(val) || 0;
+        updateFooterSummary();
     }
 
     function renderMonth(y, m) {
